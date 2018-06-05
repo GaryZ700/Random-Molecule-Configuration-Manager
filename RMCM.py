@@ -7,15 +7,18 @@
 atomBoundaries = {}
 
 #maximum distance away from origin of system that molecules can be placed 
-systemBoundaries = []
+systemBoundaries = [20,20,20]
 
 #location of system origin
 originLocation = []
 
 #number of molecules to place
-instances = 1
+instances = 2
 
-
+#areas where atoms can not be placed
+#[x list, y list, z list]
+#if coordinate exists in appropriate list, than that atom can not be spawned in that area
+takenAreas = [[],[],[]]
 
 #######################################################
 #function definitions
@@ -29,6 +32,7 @@ def parseSettings():
     #get settings
 
 #######################################################
+#get origin of specific structure
 
 
 
