@@ -19,12 +19,12 @@ class atomParser():
 
 ###########################################################    
     #define to parse all atoms
-    def all(self, f):    
+    def all(self, f, orgData=[False]):
 
         #parse arguments
         #args = parser.parse_args()
 	
-	return self.parser(f, "cat")        
+	return self.parser(f, "cat", orgData)        
 
 ###########################################################    
     #function to parse first x lines of atoms
@@ -40,25 +40,34 @@ class atomParser():
 
 ###########################################################    
    #main code for parsing atoms from coord file
-    def parser(self, f, command):
+    def parser(self, f, command, orgData):
 
         #get lines from coord file
         rawFileData = os.popen(" tail -n +2 " + f + " | head -n -1 | sed '/intdef/,$d' | " + command).read()
         
         print(rawFileData)
-	return self.atomOrganizer(rawFileData)
+	return self.atomOrganizer(rawFileData, orgData)
 
 ###########################################################   
-    #function to return coord in approriate list structure of [ [atom1], [atom2], ['symbol',x,y,z] ]
+    #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol',x,y,z]}, {structure2}, {structure3} ]
     #currently only works with TM file data
-    def atomOrganizer(self, rawFileData):
+    #can organize atoms based upon data in [[first x atoms, next y atoms, and last z atoms] orgData structure to return atoms in said configuration
+    def atomOrganizer(self, rawFileData, orgData):
 
-	#init atom coord data structure
-	atomData = []   
+	#init list indice counter
+	counter = 0
+	
+	#init atom list
+	atomData = []
+	for object in orgData:
+	    atomData.append({
 
+	    "atoms": []  
+})	
+	
 	#go through each coord line as separated by a newline
-	for coord in rawFileData.split("\n"):
-	    
+	for coord in rawFileData.split("\n"):  
+
             #filter out whitespaces from coord data
 	    coordData = filter(None, coord.split(" "))
 	    
@@ -66,8 +75,24 @@ class atomParser():
 	    if( len(coordData) > 1 ):
                 #append atom data to list object
 		atomSymbol = coordData.pop()
-                atomData.append([atomSymbol] + [float(coordData[0])] + [float(coordData[1])] + [float(coordData[2])])
-        
+                atomData[counter]["atoms"].append([atomSymbol] + [float(coordData[0])] + [float(coordData[1])] + [float(coordData[2])])
+                
+		#if orgdata was passed by user
+		if(orgData[counter] != False):
+		    
+	            #decrease orgData atom counter
+		    orgData[counter] -= 1;
+		    
+		    #check if counter should be incremented
+		    if(orgData[counter] == 0):
+		        #increment counter
+			counter += 1
+		    
+		    #check if loop should end now, since end of orgData reached
+		    if(counter >= len(orgData)):
+		       break
+		
+
 	#return processed data
 	return atomData
  

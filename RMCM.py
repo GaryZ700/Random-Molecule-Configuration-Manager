@@ -1,5 +1,11 @@
 #central file for the Random Molecule Configuration Manager
 
+#import needed classes
+
+#to parse atoms from coord file
+from atomParser import atomParser
+parser = atomParser()
+
 #######################################################
 #init global variables
 
@@ -38,14 +44,14 @@ def parseSettings():
 def COCC(atoms):
 
     #init empty list for center point
-    center = [ [0.0], [0.0], [0.0] ]    
+    center = [ 0.0, 0.0, 0.0 ]    
 
     #iterate through all atom data
     for atom in atoms:
 	
 	#iterate through three dimensions
 	for dim in range(3):
-
+                         
 	    center[dim] += atom[dim+1]
 
 	
@@ -56,5 +62,14 @@ def COCC(atoms):
     return center
 
 #######################################################
+#start of main program code
 
+#get list of all atoms in appropriate file, organized into specified structures
+#0-19 = base quinoline, 21 -33 = water cluster, 34-36
+masterAtoms = parser.all("coord", [21, 12, 3, 3])
 
+#iterate through structures in all atoms to get center of masses for all structures
+for structure in range(len(allAtoms)):
+	
+	#append center data to atom strucure dictionary
+        masterAtoms[structure]["center"] = COCC(allAtoms[structure]["atoms"])		
