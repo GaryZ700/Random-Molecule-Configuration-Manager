@@ -4,6 +4,7 @@
 
 import math
 import random
+import os
 
 #to parse atoms from coord file
 from atomParser import atomParser
@@ -87,9 +88,22 @@ def randCoord(center, boundaries):
 
 #######################################################
 #check if coords of molecule overlay another molecule within defined boundaries
-def spawnCheck(coord, moleculeList, boundaries):
+def spawnCheck(coord, atomList, boundaries):
 
-	
+	#check all three dimensions
+	for dim in range(3):
+		#iterate through all atoms in list
+		for atom in atomList:
+			
+			#check if coord is less than min values
+			if( coord[dim] > (atom[dim] - boundaries[dim]) ):
+				#if not, and coord is greater than min boundry, 
+				#check if coord is greater than coresponding max coord value
+				if(coord[dim] < (atom[dim] + boundaries[dim])):
+					#if no, and coord falls into a no place location, then adjust coord value
+					print("random coord places atom(s) on top of another, creating new coord now")
+					print(coord[dim])	
+	return coord 
 
 
 #######################################################
@@ -119,7 +133,10 @@ waterClusterCenter = [2,2,2]
 
 #get coord of random water molecule to spawn in 
 #and check if the molecule is being placed too close to another molecule
-waterCoord  = spawnCheck(randCoord(waterClusterCenter, systemBoundaries), waterCluster, atomBoundaries)
+waterCoord = spawnCheck(randCoord(waterClusterCenter, systemBoundaries), waterCluster, atomBoundaries)
 
+water = parser.all("water")
 
+#write to coord file new location
+parser.write("coord", water)
 

@@ -48,8 +48,41 @@ class atomParser():
         print(rawFileData)
 	return self.atomOrganizer(rawFileData, orgData)
 
+###########################################################    
+   #function to write data to files 
+    def write(self, f, structures):
+
+	#copy over entire coord file except for the last line, $end
+	os.popen("head -n -1 " + str(f) + " > work.coord")
+
+	#for each structure passed into the write function
+	for molecule in structures:
+		#for each substructure
+		for atom in range(len(molecule)):		
+
+			#init empty string variable
+			data = ""
+				
+			#for each dimension 
+			for dim in range(3):
+				data += "    " + str(molecule["coords"][atom][dim])
+			
+			#append atom symbol to end of string
+			data += "    " + str(molecule["atoms"][atom])
+			
+			print(data)
+		
+			#append data to new coord file
+			os.popen("echo '" + data + "' >> work.coord")
+	
+	#add $end to coord file
+	os.popen("echo '$end' >> work.coord")
+        
+	#overwrite the actual coord file
+	os.popen("mv work.coord ./" + str(f))		
+ 
 ###########################################################   
-    #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol',x,y,z]}, {structure2}, {structure3} ]
+    #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol1', 'symbol2', 'symbol3'], coords: [atom1], [x,y,z], [atom3]}, {structure2}, {structure3} ]
     #currently only works with TM file data
     #can organize atoms based upon data in [[first x atoms, next y atoms, and last z atoms] orgData structure to return atoms in said configuration
     def atomOrganizer(self, rawFileData, orgData):
@@ -76,7 +109,7 @@ class atomParser():
 	    if( len(coordData) > 1 ):
                 #append atom data to list object
 		atomSymbol = coordData.pop()
-                atomData[counter]["atoms"].append([atomSymbol])
+                atomData[counter]["atoms"].append(atomSymbol)
                 atomData[counter]["coords"].append([float(coordData[0])] + [float(coordData[1])] + [float(coordData[2])])
                 
 		#if orgdata was passed by user
