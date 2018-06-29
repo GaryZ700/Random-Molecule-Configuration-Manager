@@ -62,7 +62,8 @@ class atomParser():
 	for object in orgData:
 	    atomData.append({
 
-	    "atoms": []  
+	    "atoms": [], 
+	    "coords": [] 
 })	
 	
 	#go through each coord line as separated by a newline
@@ -75,7 +76,8 @@ class atomParser():
 	    if( len(coordData) > 1 ):
                 #append atom data to list object
 		atomSymbol = coordData.pop()
-                atomData[counter]["atoms"].append([atomSymbol] + [float(coordData[0])] + [float(coordData[1])] + [float(coordData[2])])
+                atomData[counter]["atoms"].append([atomSymbol])
+                atomData[counter]["coords"].append([float(coordData[0])] + [float(coordData[1])] + [float(coordData[2])])
                 
 		#if orgdata was passed by user
 		if(orgData[counter] != False):

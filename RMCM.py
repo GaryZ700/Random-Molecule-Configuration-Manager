@@ -52,7 +52,7 @@ def COCC(atoms):
 	#iterate through three dimensions
 	for dim in range(3):
                          
-	    center[dim] += atom[dim+1]
+	    center[dim] += atom[dim]
 
 	
 	#get center point by dividing each dimension value by the number of atom in the structure
@@ -66,10 +66,12 @@ def COCC(atoms):
 
 #get list of all atoms in appropriate file, organized into specified structures
 #0-19 = base quinoline, 21 -33 = water cluster, 34-36
-masterAtoms = parser.all("coord", [21, 12, 3, 3])
+masterAtoms = parser.all("coord", [21, 3, 3, 3, 3, 3, 3])
 
 #iterate through structures in all atoms to get center of masses for all structures
-for structure in range(len(allAtoms)):
+for structure in range(len(masterAtoms)):
 	
 	#append center data to atom strucure dictionary
-        masterAtoms[structure]["center"] = COCC(allAtoms[structure]["atoms"])		
+        masterAtoms[structure]["center"] = COCC(masterAtoms[structure]["coords"])	
+
+print(masterAtoms)	
