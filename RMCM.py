@@ -2,6 +2,9 @@
 
 #import needed classes
 
+import math
+import random
+
 #to parse atoms from coord file
 from atomParser import atomParser
 parser = atomParser()
@@ -10,7 +13,7 @@ parser = atomParser()
 #init global variables
 
 #minimum distance that molecule can be placed towards certain atoms/molecules
-atomBoundaries = {}
+atomBoundaries = [5, 5, 5]
 
 #maximum distance away from origin of system that molecules can be placed 
 systemBoundaries = [20,20,20]
@@ -48,7 +51,6 @@ def COCC(atoms):
 
     #iterate through all atom data
     for atom in atoms:
-	
 	#iterate through three dimensions
 	for dim in range(3):
                          
@@ -57,23 +59,45 @@ def COCC(atoms):
         	
 	#get center point by dividing each dimension value by the number of atom in the structure
 	numberOfAtoms = len(atoms)
-	print(numberOfAtoms)
 
 	#init new variable to store centers
 	finalCenter = []	
 
+	#for each center point, divide by total number of atoms to find center point
  	for centerPoint in center:
-		#for each center point, divide by total number of atoms to find center point
 		finalCenter.append( centerPoint / numberOfAtoms )
 
     return finalCenter
+
+#######################################################
+#create random xyz coordinates based upon starting point and boundries
+def randCoord(center, boundaries):
+
+	#create new boundries with respect to the center point
+	centerBoundaries = [ (pow(-1, i)) * boundaries[int(math.floor(i/2))] + center[int(math.floor(i/2))] for i in range(6) ]
+
+	#init array for random coords
+	randCoord = []
+
+	#create random coords within boundries for x, y, and z axis
+        for dim in range(3):
+		randCoord.append(random.uniform(centerBoundaries[dim+3], centerBoundaries[dim]))
+	
+	return randCoord	
+
+#######################################################
+#check if coords of molecule overlay another molecule within defined boundaries
+def spawnCheck(coord, moleculeList, boundaries):
+
+	
+
 
 #######################################################
 #start of main program code
 
 #get list of all atoms in appropriate file, organized into specified structures
 #0-19 = base quinoline, 21 -33 = water cluster, 34-36
-masterAtoms = parser.all("coord", [21, 3, 3, 3, 3, 3, 3])
+masterAtoms = parser.all("coord", [21, 3, 3, 3, 3])
 
 #iterate through structures in all atoms to get center of masses for all structures
 for structure in range(len(masterAtoms)):
@@ -81,4 +105,21 @@ for structure in range(len(masterAtoms)):
 	#append center data to atom strucure dictionary
         masterAtoms[structure]["center"] = COCC(masterAtoms[structure]["coords"])	
 
-print(masterAtoms)	
+
+waterCluster = []
+
+for waterClusterMolecule in range(4):
+    waterCluster.append(masterAtoms[waterClusterMolecule + 1]["center"])
+
+
+waterClusterCenter = COCC(waterCluster)
+
+
+waterClusterCenter = [2,2,2]
+
+#get coord of random water molecule to spawn in 
+#and check if the molecule is being placed too close to another molecule
+waterCoord  = spawnCheck(randCoord(waterClusterCenter, systemBoundaries), waterCluster, atomBoundaries)
+
+
+
