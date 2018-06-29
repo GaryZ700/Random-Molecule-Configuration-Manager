@@ -54,12 +54,19 @@ def COCC(atoms):
                          
 	    center[dim] += atom[dim]
 
-	
+        	
 	#get center point by dividing each dimension value by the number of atom in the structure
 	numberOfAtoms = len(atoms)
-        center[:] = [centerPoint / numberOfAtoms for centerPoint in center]
+	print(numberOfAtoms)
 
-    return center
+	#init new variable to store centers
+	finalCenter = []	
+
+ 	for centerPoint in center:
+		#for each center point, divide by total number of atoms to find center point
+		finalCenter.append( centerPoint / numberOfAtoms )
+
+    return finalCenter
 
 #######################################################
 #start of main program code
