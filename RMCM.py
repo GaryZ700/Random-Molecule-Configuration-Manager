@@ -107,6 +107,13 @@ def spawnCheck(coord, atomList, boundaries):
 
 
 #######################################################
+#function to translate structure object to new coord
+def translate(structure, coord):
+	
+	#get difference 
+
+
+#######################################################
 #start of main program code
 
 #get list of all atoms in appropriate file, organized into specified structures
@@ -136,6 +143,9 @@ waterClusterCenter = [2,2,2]
 waterCoord = spawnCheck(randCoord(waterClusterCenter, systemBoundaries), waterCluster, atomBoundaries)
 
 water = parser.all("water")
+
+#translate water molecule to correct coordinates
+translate(water, waterCoord)
 
 #write to coord file new location
 parser.write("coord", water)
