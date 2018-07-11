@@ -18,6 +18,75 @@ class atomParser():
     #parser.add_argument('-file', metavar='file', type=str, help='name of Turbomole coord file', default='coord')
 
 ###########################################################    
+    #function to run grep and get line numbers of files in a list format
+    def grep(self, string, fileName, lineNum=True):
+
+	#init line number list and file name list
+	lineNumbers =  []
+	locations = []	
+
+	#run grep with specified parameters
+	grepResult = os.popen( "grep --with-filename -n '" + string + "' " + fileName).read().split("\n")
+
+	print(grepResult)
+
+	#get number of colons in first result
+	colonCount = grepResult[0].count(":")
+
+	#check how many times : appears in  grep results
+	if(colonCount > 0):
+
+	    #get rid of empty blank space in last slot of results
+	    grepResult.pop()
+	
+	    #iterate though all results found 
+	    for result in grepResult:
+
+		if(lineNum):
+	            #get line number of result
+		    lineNumbers.append( int( result.split(":")[1]) )
+		    locations.append( result.split(":")[0]  )
+
+		else:
+                    lineNumbers.append(result.split(string)[1])
+	
+	    #return lineNumbers
+	    return lineNumbers, locations
+	
+	else:
+	     #if grep results were empty return -1
+	     return [-1]
+     
+
+###########################################################    
+    #function to get number of atoms in simulation
+    #by defualt uses coord file name to get number of atoms
+    #if md=true, then looks in mdmaster for number of atoms
+    def getNumberOfAtoms(self, coord="coord", md=False):
+	
+        if(md):
+    	    #if md simulation then get number of atoms from mdmaster
+            atomNumber = int(self.grep("natoms", "mdmaster", lineNum=False)[0][0])
+	
+        else:
+	    #if not md sim, then use coord file
+		
+            #get grep on intdef
+	    intdef = (self.grep("intdef", coord))[0]
+
+	    #check if intdef exits in coord file
+	    if(intdef != 0):
+	        atomNumber = intdef - 2
+
+	    #if not, use end tag instead
+	    else:
+		atomNumber = (self.grep("end", coord))[0] - 2
+
+	
+	#calculate number of atoms in simulation
+	return atomNumber
+
+###########################################################    
     #define to parse all atoms
     def all(self, f, orgData=[False]):
 
@@ -81,6 +150,64 @@ class atomParser():
 	#overwrite the actual coord file
 	os.popen("mv work.coord ./" + str(f))		
  
+###########################################################    
+    #function to parse specified time structure from mdlog files
+    #ts = specific timestep to parse, can be either single timestep or list of timesteps, should be ts number, not actual time,
+    #    ex. ts=[1,2,3] not ts=[0,20,40,60]
+    #r = true or false, if true, then will parse all timesteps inbetween range specifed in ts
+    #logHead is string of name of start of mdlog files
+    #pv is string of either p or v or both, represents whether user wants to parse both position and velocity, or only one or the other, p is for position, v is for velocity
+    def parseLog(self, ts, r=False, logHead="mdlog", pv="pv"):
+	
+	#init data holder
+	logData = []
+
+	#get number of atoms in simulation as well as tsDelta
+	atomNumber = self.getNumberOfAtoms(md=True)
+	
+	#get time step delta value, use loop to check if there are any blank strings instead of numerical values
+	for value in os.popen("sed '" + str( atomNumber + 5 ) + "q;d' '" + str(logHead) + ".1'").read().split(" "):
+
+	    if(value == ""):
+	        continue
+	    else:
+	        tsDelta = int(float(value))
+		break
+	
+        #check if range of timesteps are to be parsed
+        if(r):
+	
+	    #get list of timesteps to parse
+	    tsToParse = [ counter + (ts[1] - ts[0]) for counter in range(ts[1]) ]	
+
+	elif(type(ts) == type([])):
+	    #if list of timesteps do not need to be parsed, then check if list of timesteps were passed in
+            #if yes, then add that list to tsToParse
+	    tsToParse = ts
+
+	else:
+	    #if single timestep passed in, then append that sole ts to timesteps to parse list
+            tsToParse = [ts]	
+
+	#loop through all timesteps to parse
+	for ts in tsToParse:
+	
+	    #get actual timestep numerical value
+	    tsNum = "t=   " + str( (ts-1) * tsDelta )
+
+	    #get linenumber where timstep data begins 
+	    lineNumber, location = self.grep(tsNum, (logHead + ".*"))
+
+	    #calculate linenumber where timestep data ends
+	    lineNumber.append( lineNumber[0] + atomNumber)
+	    lineNumber[0] -= 1
+
+	    print(lineNumber)
+	    
+            #get raw timestep data from file
+	
+			
+
 ###########################################################   
     #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol1', 'symbol2', 'symbol3'], coords: [atom1], [x,y,z], [atom3]}, {structure2}, {structure3} ]
     #currently only works with TM file data
