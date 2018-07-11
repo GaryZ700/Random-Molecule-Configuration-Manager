@@ -49,6 +49,11 @@ class atomParser():
 
 		else:
                     lineNumbers.append(result.split(string)[1])
+
+	    print("$$$$$$$$$$$$$$$$$4")
+	    print(lineNumbers)
+	    print(locations)
+            print("$$$$$$$$$$$$$$$$$$$")
 	
 	    #return lineNumbers
 	    return lineNumbers, locations
@@ -164,10 +169,10 @@ class atomParser():
 
 	#get number of atoms in simulation as well as tsDelta
 	atomNumber = self.getNumberOfAtoms(md=True)
-	
+        
 	#get time step delta value, use loop to check if there are any blank strings instead of numerical values
-	for value in os.popen("sed '" + str( atomNumber + 5 ) + "q;d' '" + str(logHead) + ".1'").read().split(" "):
-
+	for value in os.popen("sed '" + str( atomNumber + self.grep("t=   0", "mdlog.1")[0][0] + 1) + "q;d' '" + str(logHead) + ".1'").read().split(" "):
+	    
 	    if(value == ""):
 	        continue
 	    else:
@@ -192,21 +197,73 @@ class atomParser():
 	#loop through all timesteps to parse
 	for ts in tsToParse:
 	
+	    print(tsToParse)
 	    #get actual timestep numerical value
-	    tsNum = "t=   " + str( (ts-1) * tsDelta )
+	    tsNum =  float( (ts-1) * tsDelta) 
 
 	    #get linenumber where timstep data begins 
-	    lineNumber, location = self.grep(tsNum, (logHead + ".*"))
+	    lineNumber, location = self.grep("t=   " + str(tsNum), (logHead + ".*"))
 
 	    #calculate linenumber where timestep data ends
 	    lineNumber.append( lineNumber[0] + atomNumber)
-	    lineNumber[0] -= 1
-
+	    
+	    #section to figure whether full coord and velocity should be parsed or only one or the other
+	    if(pv.lower() == "p"):
+		#only parse position, stop linenumber at last coord location
+	        lineNumber.append( lineNumber[0] + atomNumber)
+	    
+            print(tsDelta)
+	    print(tsNum)
+	    print("##########################3")
 	    print(lineNumber)
 	    
             #get raw timestep data from file
+	    timestepData = os.popen( "sed -n '" + str(lineNumber[0]) + "," + str(lineNumber[1]) + "p' " + location[0]).read()
+
+	    print(timestepData) 
+            print(lineNumber)	
+
+	    #convert raw data into json type list structure of the form
+	    #[ {time:time, "atomLetter":[{coord, atom# in mdlog, velocity}], timestep, timestep  ]
+	    logData.append(self.organizeMDLog(timestepData, pv))
+
+	    return logData
+
+###########################################################   
+    #function to organize logdata into a json ready list structure
+    def organizeMDLog(self, timestepData, pv):
+
+	#init lines from mdlog and empty data structure
+	lines =  timestepData.split("\n")
+
+	tsData = {
+
+            #get numerical value of timestep time
+	    "time": float(lines.pop(0).split("=")[1])	
+	    
+}
+
+	#iterate through all mdlog lines passed into function
+	for rawLine in lines:
 	
-			
+	    line = filter(None, rawLine.split(" "))
+
+            print(line)
+
+	    #if atom type not added in to ts data, then do so
+	    if( not (line[3] in tsData) ):
+	        tsData[line[3]] = { "coord": [] }
+
+	    print("GGGGGGGGGGGGG")
+	    print(line[3])
+
+            #append coord data to tsData
+	    tsData[line[3]]["coord"].append( [ tsData[val] for val in range(3) ] )	
+
+
+	print(tsData)
+	return tsData
+
 
 ###########################################################   
     #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol1', 'symbol2', 'symbol3'], coords: [atom1], [x,y,z], [atom3]}, {structure2}, {structure3} ]
