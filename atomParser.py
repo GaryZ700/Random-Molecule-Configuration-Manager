@@ -225,16 +225,16 @@ class atomParser():
 
 	    #convert raw data into json type list structure of the form
 	    #[ {time:time, "atomLetter":[{coord, atom# in mdlog, velocity}], timestep, timestep  ]
-	    logData.append(self.organizeMDLog(timestepData, pv))
-
-	    return logData
+	    return self.organizeMDLog(timestepData, pv)
 
 ###########################################################   
     #function to organize logdata into a json ready list structure
+    #[ {time:time, "atomLetter":[{coord, atom# in mdlog, velocity}], timestep, timestep  ]
     def organizeMDLog(self, timestepData, pv):
 
 	#init lines from mdlog and empty data structure
 	lines =  timestepData.split("\n")
+	lines.pop()
 
 	tsData = {
 
@@ -242,26 +242,21 @@ class atomParser():
 	    "time": float(lines.pop(0).split("=")[1])	
 	    
 }
+	print(lines)
 
 	#iterate through all mdlog lines passed into function
 	for rawLine in lines:
 	
 	    line = filter(None, rawLine.split(" "))
 
-            print(line)
 
 	    #if atom type not added in to ts data, then do so
 	    if( not (line[3] in tsData) ):
 	        tsData[line[3]] = { "coord": [] }
 
-	    print("GGGGGGGGGGGGG")
-	    print(line[3])
-
             #append coord data to tsData
-	    tsData[line[3]]["coord"].append( [ tsData[val] for val in range(3) ] )	
+	    tsData[line[3]]["coord"].append( [ line[val] for val in range(3) ] )	
 
-
-	print(tsData)
 	return tsData
 
 
