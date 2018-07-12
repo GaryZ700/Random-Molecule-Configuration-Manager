@@ -21,6 +21,10 @@ class atomParser():
     #function to run grep and get line numbers of files in a list format
     def grep(self, string, fileName, lineNum=True):
 
+	print("stringstringstringstringstringstringstring")
+	print(string)
+	print("string")
+	
 	#init line number list and file name list
 	lineNumbers =  []
 	locations = []	
@@ -28,7 +32,7 @@ class atomParser():
 	#run grep with specified parameters
 	grepResult = os.popen( "grep --with-filename -n '" + string + "' " + fileName).read().split("\n")
 
-	print(grepResult)
+#	print(grepResult)
 
 	#get number of colons in first result
 	colonCount = grepResult[0].count(":")
@@ -50,10 +54,10 @@ class atomParser():
 		else:
                     lineNumbers.append(result.split(string)[1])
 
-	    print("$$$$$$$$$$$$$$$$$4")
-	    print(lineNumbers)
-	    print(locations)
-            print("$$$$$$$$$$$$$$$$$$$")
+#	    print("$$$$$$$$$$$$$$$$$4")
+#	    print(lineNumbers)
+#	    print(locations)
+#           print("$$$$$$$$$$$$$$$$$$$")
 	
 	    #return lineNumbers
 	    return lineNumbers, locations
@@ -119,7 +123,7 @@ class atomParser():
         #get lines from coord file
         rawFileData = os.popen(" tail -n +2 " + f + " | head -n -1 | sed '/intdef/,$d' | " + command).read()
         
-        print(rawFileData)
+       # print(rawFileData)
 	return self.atomOrganizer(rawFileData, orgData)
 
 ###########################################################    
@@ -144,7 +148,7 @@ class atomParser():
 			#append atom symbol to end of string
 			data += "    " + str(molecule["atoms"][atom])
 			
-			print(data)
+		#	print(data)
 		
 			#append data to new coord file
 			os.popen("echo '" + data + "' >> work.coord")
@@ -202,26 +206,27 @@ class atomParser():
 	    tsNum =  float( (ts-1) * tsDelta) 
 
 	    #get linenumber where timstep data begins 
-	    lineNumber, location = self.grep("t=   " + str(tsNum), (logHead + ".*"))
+	    lineNumber, location = self.grep("t=   " + str(tsNum) + "00", (logHead + ".*"))
 
 	    #calculate linenumber where timestep data ends
-	    lineNumber.append( lineNumber[0] + atomNumber)
+	    lineNumber.append( lineNumber[0] + atomNumber
+)
 	    
 	    #section to figure whether full coord and velocity should be parsed or only one or the other
 	    if(pv.lower() == "p"):
 		#only parse position, stop linenumber at last coord location
 	        lineNumber.append( lineNumber[0] + atomNumber)
 	    
-            print(tsDelta)
-	    print(tsNum)
-	    print("##########################3")
+           # print(tsDelta)
+	   # print(tsNum)
+	    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
 	    print(lineNumber)
-	    
+	    print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
             #get raw timestep data from file
 	    timestepData = os.popen( "sed -n '" + str(lineNumber[0]) + "," + str(lineNumber[1]) + "p' " + location[0]).read()
 
-	    print(timestepData) 
-            print(lineNumber)	
+	   # print(timestepData) 
+           # print(lineNumber)	
 
 	    #convert raw data into json type list structure of the form
 	    #[ {time:time, "atomLetter":[{coord, atom# in mdlog, velocity}], timestep, timestep  ]
@@ -244,13 +249,15 @@ class atomParser():
 	    "time": float(lines.pop(0).split("=")[1])	
 	    
 }
-	print(lines)
+#	print(lines)
 
 	#iterate through all mdlog lines passed into function
 	for rawLine in lines:
 	
 	    line = filter(None, rawLine.split(" "))
-
+	    print("\n\n\n #################################3")
+	    print(line)
+	    print("#######################################")
 
 	    #if atom type not added in to ts data, then do so
 	    if( not (line[3] in tsData) ):
