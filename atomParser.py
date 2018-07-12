@@ -225,7 +225,9 @@ class atomParser():
 
 	    #convert raw data into json type list structure of the form
 	    #[ {time:time, "atomLetter":[{coord, atom# in mdlog, velocity}], timestep, timestep  ]
-	    return self.organizeMDLog(timestepData, pv)
+	    logData.append(self.organizeMDLog(timestepData, pv))
+		
+        return logData
 
 ###########################################################   
     #function to organize logdata into a json ready list structure
@@ -256,6 +258,7 @@ class atomParser():
 
             #append coord data to tsData
 	    tsData[line[3]]["coord"].append( [ line[val] for val in range(3) ] )	
+
 
 	return tsData
 
