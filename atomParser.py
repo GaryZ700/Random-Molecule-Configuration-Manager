@@ -264,7 +264,7 @@ class atomParser():
 	        tsData[line[3]] = { "coord": [] }
 
             #append coord data to tsData
-	    tsData[line[3]]["coord"].append( [ line[val] for val in range(3) ] )	
+	    tsData[line[3]]["coord"].append( [ float(line[val]) for val in range(3) ] )	
 
 
 	return tsData
