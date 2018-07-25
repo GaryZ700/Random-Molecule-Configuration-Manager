@@ -187,7 +187,7 @@ class atomParser():
         if(r):
 	
 	    #get list of timesteps to parse
-	    tsToParse = [ counter + (ts[1] - ts[0]) for counter in range(ts[1]) ]	
+	    tsToParse = [ (counter +  ts[0]) for counter in range( (ts[1] - ts[0])) ]	
 
 	elif(type(ts) == type([])):
 	    #if list of timesteps do not need to be parsed, then check if list of timesteps were passed in
@@ -269,6 +269,39 @@ class atomParser():
 
 	return tsData
 
+###########################################################   
+#function to take a specific timestep data structure and create a coord file from that timestep
+#tsData = [ ts1, ts2, ... tsn ]
+    def log2coord(self, tsData, folder="log2coord"):
+    
+    	#make new folder and move into said folder
+    	os.popen("mkdir " + str(folder))
+    	os.chdir(folder)		
+    
+    	#loop over all timesteps in tsData
+    	for ts in tsData:
+            print(ts)	
+    	    #create folder with time of timestep as name and move into said folder
+    	    time = str(ts.pop("time"))
+    	    os.popen("mkdir " + time)
+    	    os.chdir(time)	
+    	
+    	    #begin converting log data to a coord file
+    	    coord = "$coord\n"
+    	
+    	    for atomType in ts:
+                for atom in ts[atomType]["coord"]:
+    	            for dim in range(3):
+                        coord += str(atom[dim]) + "    "	
+    		    
+	             coord += atomType + "\n"
+   	
+    	    coord += "$end"	
+    	    os.popen("echo '" + coord + "' > coord")			
+    
+    	    os.chdir("..")
+    
+        os.chdir("..")
 
 ###########################################################   
     #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol1', 'symbol2', 'symbol3'], coords: [atom1], [x,y,z], [atom3]}, {structure2}, {structure3} ]
