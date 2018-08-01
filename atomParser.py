@@ -288,13 +288,13 @@ class atomParser():
     	
     	    #begin converting log data to a coord file
     	    coord = "$coord\n"
-    	
+		   
     	    for atomType in ts:
                 for atom in ts[atomType]["coord"]:
     	            for dim in range(3):
                         coord += str(atom[dim]) + "    "	
     		    
-	             coord += atomType + "\n"
+	            coord += atomType + "\n"
    	
     	    coord += "$end"	
     	    os.popen("echo '" + coord + "' > coord")			
