@@ -5,6 +5,7 @@ from atomParser import atomParser
 py2Bash = atomParser()
 
 import os
+import bisect
 
 #Class to extract specified energies from Turbomole simulation
 #Requires out file from jobex script in order to function properly
@@ -48,9 +49,19 @@ class energyExtractor():
 			print("TS to parse " + str(tsNumber + tsData[0]) + "\n")
 
 			#get line number of specified md step in outfile
-			line = MDLines[ tsNumber - 1  ]
+			line = MDLines[ tsNumber - 1  ]	
 			
-			
+			#iterate through all energies user requested
+			#sort list to be sure it is in numerical order
+			#use bisect to find energy starting lines that is just before this MD step, and corresponds to its energy
+			correspondingEnergy = [ energy[bisect.bisect(energy.sort(), line) - 1] for energy in energyLines]			
+
+			print(correspondingEnergy)
+
+			#parse out specifed energy text "blocks" from jobex out file and place each in its own separate file
+			for CE in correspondingEnergy: 
+								
+
 
 #////////////////////////////////////////////////////////////////////
 
