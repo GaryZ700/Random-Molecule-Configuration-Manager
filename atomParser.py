@@ -156,9 +156,10 @@ class atomParser():
 	#get number of atoms and add plus three to get line where md delta t is located
 	#and split line by spaces
         deltaLine = os.popen("sed -n '" + str(self.getNumberOfAtoms(md=True) + 4) + "p' mdlog.1" ).read().split(" ")
-
+	print(deltaLine)
+	print(filter(None, deltaLine))
 	#remove all spaces from line
-	return float(filter(None, deltaLine)[0][0])
+	return float(filter(None, deltaLine)[0])
 
 ###########################################################    
     #function to parse specified time structure from mdlog files
