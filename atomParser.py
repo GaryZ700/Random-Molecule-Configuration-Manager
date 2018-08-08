@@ -20,10 +20,6 @@ class atomParser():
 ###########################################################    
     #function to run grep and get line numbers of files in a list format
     def grep(self, string, fileName, lineNum=True):
-
-	print("stringstringstringstringstringstringstring")
-	print(string)
-	print("string")
 	
 	#init line number list and file name list
 	lineNumbers =  []
@@ -31,8 +27,6 @@ class atomParser():
 
 	#run grep with specified parameters
 	grepResult = os.popen( "grep --with-filename -n '" + string + "' " + fileName).read().split("\n")
-
-#	print(grepResult)
 
 	#get number of colons in first result
 	colonCount = grepResult[0].count(":")
@@ -110,10 +104,6 @@ class atomParser():
 
 	return self.parser(f, "head -n " + str(first))
 	
-###########################################################    
-    #function to parse last x lines of atoms
-    def last(self, f, last):
-	
 	return self.parser(f, "tail -n " + str(last))
 
 ###########################################################    
@@ -160,6 +150,17 @@ class atomParser():
 	os.popen("mv work.coord ./" + str(f))		
  
 ###########################################################    
+    #function to get timestep delta value from mdmaster
+    def getTimestepDelta(self):
+
+	#get number of atoms and add plus three to get line where md delta t is located
+	#and split line by spaces
+        deltaLine = os.popen("sed -n '" + str(self.getNumberOfAtoms(md=True) + 4) + "p' mdlog.1" ).read().split(" ")
+
+	#remove all spaces from line
+	return float(filter(None, deltaLine)[0][0])
+
+###########################################################    
     #function to parse specified time structure from mdlog files
     #ts = specific timestep to parse, can be either single timestep or list of timesteps, should be ts number, not actual time,
     #    ex. ts=[1,2,3] not ts=[0,20,40,60]
@@ -196,7 +197,7 @@ class atomParser():
 
 	else:
 	    #if single timestep passed in, then append that sole ts to timesteps to parse list
-            tsToParse = [ts]	
+            tsToParse = [float(ts)]	
 
 	#loop through all timesteps to parse
 	for ts in tsToParse:
@@ -205,12 +206,11 @@ class atomParser():
 	    #get actual timestep numerical value
 	    tsNum =  float( (ts-1) * tsDelta) 
 
-	    #get linenumber where timstep data begins 
 	    lineNumber, location = self.grep("t=   " + str(tsNum) + "00", (logHead + ".*"))
 
 	    #calculate linenumber where timestep data ends
-	    lineNumber.append( lineNumber[0] + atomNumber
-)
+	    lineNumber.append( lineNumber[0] + atomNumber)
+
 	    
 	    #section to figure whether full coord and velocity should be parsed or only one or the other
 	    if(pv.lower() == "p"):
@@ -229,9 +229,11 @@ class atomParser():
            # print(lineNumber)	
 
 	    #convert raw data into json type list structure of the form
-	    #[ {time:time, "atomLetter":[{coord, atom# in mdlog, velocity}], timestep, timestep  ]
+	    #[ {time:time, timestep:timestep, "atomLetter":[{coord, coordNumber, velocity}], timestep, timestep  ]
 	    logData.append(self.organizeMDLog(timestepData, pv))
+
 		
+
         return logData
 
 ###########################################################   
@@ -252,8 +254,12 @@ class atomParser():
 #	print(lines)
 
 	#iterate through all mdlog lines passed into function
+	#and maintain counter for coord number
+	coordNumber = 0
 	for rawLine in lines:
-	
+	    #increment coord number
+	    coordNumber += 1	
+
 	    line = filter(None, rawLine.split(" "))
 	    print("\n\n\n #################################3")
 	    print(line)
@@ -261,19 +267,52 @@ class atomParser():
 
 	    #if atom type not added in to ts data, then do so
 	    if( not (line[3] in tsData) ):
-	        tsData[line[3]] = { "coord": [] }
+		#coord is xyz of atom, while coord number is the line number that this atom is located in the tm coord file
+	        tsData[line[3]] = { "coord": [], "coordNumber":[] }
 
             #append coord data to tsData
 	    tsData[line[3]]["coord"].append( [ float(line[val]) for val in range(3) ] )	
-
+	    tsData[line[3]]["coordNumber"] = coordNumber
 
 	return tsData
 
 ###########################################################   
+    #function that when given a list of atoms, and  their coords in [[x,y,z],[x,y,z]], will find line numbers of said atoms in the coord file
+    def lineNumber(self, atoms, coords, f="coord"):
+	
+	#init line numbers list
+	lineNumbers = []
+	print(coords)
+	#iterate through all atoms
+	for atom in range(len(atoms)):
+
+	    line = ""
+	    for xyz in coords[atom]:
+		if(xyz < 0):
+		    start = "\-"
+		    xyz *= -1
+		else:
+		    start = ""
+		
+		line += start + str(xyz) + "\s*"
+            
+	    line += atoms[atom]
+	    
+	    lineNumbers.append(int(self.grep(line, f, lineNum=True)[0][0]))
+	
+	return lineNumbers
+
+###########################################################   
 #function to take a specific timestep data structure and create a coord file from that timestep
 #tsData = [ ts1, ts2, ... tsn ]
-    def log2coord(self, tsData, folder="log2coord"):
+    def log2coord(self, tsData, folder="log2coord", useTimestep = False):
     
+	#check if each subfolder should be named after log timestep value or timestep number as in order in mdlog
+	if(useTimestep):
+	    conversion = 1.0
+	else:
+	    conversion = self.getTimestepDelta()
+
     	#make new folder and move into said folder
     	os.popen("mkdir " + str(folder))
     	os.chdir(folder)		
@@ -282,7 +321,7 @@ class atomParser():
     	for ts in tsData:
             print(ts)	
     	    #create folder with time of timestep as name and move into said folder
-    	    time = str(ts.pop("time"))
+    	    time = str(ts["time"]/conversion)
     	    os.popen("mkdir " + time)
     	    os.chdir(time)	
     	
@@ -290,6 +329,8 @@ class atomParser():
     	    coord = "$coord\n"
 		   
     	    for atomType in ts:
+		if(atomType == "time"):
+		    continue
                 for atom in ts[atomType]["coord"]:
     	            for dim in range(3):
                         coord += str(atom[dim]) + "    "	
@@ -304,6 +345,7 @@ class atomParser():
         os.chdir("..")
 
 ###########################################################   
+    #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol1', 'symbol2', 'symbol3'], coords: [atom1], [x,y,z], [atom3]}, {structure2}, {structure3} ]
     #function to return coord in approriate list structure of [ {atoms:[atom1], [atom2], ['symbol1', 'symbol2', 'symbol3'], coords: [atom1], [x,y,z], [atom3]}, {structure2}, {structure3} ]
     #currently only works with TM file data
     #can organize atoms based upon data in [[first x atoms, next y atoms, and last z atoms] orgData structure to return atoms in said configuration
