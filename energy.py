@@ -54,7 +54,7 @@ class energyExtractor():
 			
 			#else if single ts only in this string
 			else:
-				tsData.append(int(ts))
+				tsData.append(int(float(ts)))
 
 		#get linenumbers of all md steps in out file
 		MDLines = self.getMDLines(outFile)
